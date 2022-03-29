@@ -102,7 +102,7 @@ contract Voting{
 // *** ФУНКЦИИ ДОБАВЛЕНИЯ ГОЛОСОВАНИЯ И КАНДИДАДТОВ ***
 
     // функция добавления нового голосования
-    function addVotes(string calldata _vName)external onlyOwner{
+    function addVote(string calldata _vName)external onlyOwner{
         // добавляем голосование
         allVotes.push();
         // сохраняем индекс для удобства
@@ -422,8 +422,10 @@ contract Voting{
         view
         returns(VoteInfo memory)
     {
+        // проверка, что такое id существует
+        require(allVotes.length > --_vId, "There is no vote with this id");
         VoteInfo  memory oneVote;
-        oneVote.vId = allVotes[--_vId].vId;
+        oneVote.vId = allVotes[_vId].vId;
         oneVote.vStartTime = allVotes[_vId].vStartTime;
         oneVote.vTotal = allVotes[_vId].vTotal;
         oneVote.vCandidateCount = allVotes[_vId].vCandidates.length;
