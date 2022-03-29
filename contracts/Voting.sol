@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.7.0;
+pragma experimental ABIEncoderV2;
 
 contract Voting{
 
     // адрес хозяина контракта
     address owner;
+    // комиссия с каждого голосования становится доступна для вывода,
+    // только после окончания голосования
+    uint fee;
 
     // структура кандидата
     struct Candidate {
@@ -76,15 +80,17 @@ contract Voting{
 
     // проверяем, что функцию вызывает owner
     modifier onlyOwner(){
-        require(msg.sender == owner);
+        require(msg.sender == owner,
+        "Only the host can add, change, delete votes and candidates");
         _;
     }
 
     // проверка, что голосование не началось
     // нужно для редактирования голосований и списков кандидатов
     // не честно изменять голосование, добавлять/редактировать/убирать кандидадтов во время голосования
-    modifier voitesDontStart(uint _vId){
-        require(allVotes[_vId].vStatusStart == false);
+    modifier voteDontStart(uint _vId){
+        require(allVotes[_vId].vStatusStart == false,
+        "Voting has begun. You cannot change or delete it");
         _;
     }
 
@@ -95,7 +101,7 @@ contract Voting{
 
 // *** ФУНКЦИИ ДОБАВЛЕНИЯ ГОЛОСОВАНИЯ И КАНДИДАДТОВ ***
 
-    // функция добавления нового голосования РАБОТАЕТ - РЕФАКТОР - 
+    // функция добавления нового голосования
     function addVotes(string calldata _vName)external onlyOwner{
         // добавляем голосование
         allVotes.push();
@@ -107,57 +113,43 @@ contract Voting{
         allVotes[vIndex].vId = vIndex + 1;
     }
 
-/* аргументы для проверки
-0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2
-QWERT
-*/
-    // функция добавления одного нового кандидата в голосование РАБОТАЕТ - РЕФАКТОР - 
+    // функция добавления одного нового кандидата в голосование
     function addCandidateToVotes(
         uint _vId,
-        address _cAddress,
-        string calldata _cName
+        string calldata _cName,
+        address _cAddress
     )
         external
         onlyOwner
-        voitesDontStart(--_vId)
+        voteDontStart(--_vId)
     {
         // получаем id кандидата
         uint cId = allVotes[_vId].vCandidates.length + 1;
         // добавляем нового кандидата в список
         allVotes[_vId].vCandidates.push(Candidate(cId, 0, _cName, _cAddress));
     }
-/* это аргументы для проверки
-1
-["ASD","ZXC","QWE"]
-["0x583031D1113aD414F02576BD6afaBfb302140225","0x4B0897b0513fdC7C541B6d9D7E929C4e5364D2dB","0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c"]
-*/
-    // функция добавления кандидатов в голосование списокм РАБОТАЕТ - РЕФАКТОР - 
-    function addListCandidateToVotes(
+
+    // функция добавления кандидатов в голосование списокм
+    function addListCandidatesToVotes(
         uint _vId,
         string[] calldata _cNames,
         address[] calldata _cAddresses
     )
         external
         onlyOwner
-        voitesDontStart(--_vId)
+        voteDontStart(--_vId)
     {
         // получаем id кандидата
         uint cId = allVotes[_vId].vCandidates.length;
 
         for(uint i = 0; i < _cNames.length; i++){
             // добавляем нового кандидата в список
-            allVotes[_vId].vCandidates.push(Candidate(cId + i, 0, _cNames[i], _cAddresses[i]));
+            allVotes[_vId].vCandidates.push(Candidate(++cId, 0, _cNames[i], _cAddresses[i]));
         }
     }
 
-/* это аргументы для проверки
-V_2
-["ASD","ZXC","QWE"]
-["0x583031D1113aD414F02576BD6afaBfb302140225","0x4B0897b0513fdC7C541B6d9D7E929C4e5364D2dB","0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c"]
-
-*/
-    // ультра-функция добавления нового голосования сразу со списком кандидатов РАБОТАЕТ - РЕФАКТОР - 
-    function addVotesAndListCandidate(
+    // ультра-функция добавления нового голосования сразу со списком кандидатов
+    function addVotesAndListCandidates(
         string calldata _vName, 
         string[] calldata _cNames,
         address[] calldata _cAddresses
@@ -173,15 +165,16 @@ V_2
         allVotes[vIndex].vName = _vName;
         // сохраняем id голосования
         allVotes[vIndex].vId = vIndex + 1;
-        // получаем id кандидата
-        uint cId = 0;
+        // id кандидата
+        uint cId = 1;
         for(uint i = 0; i < _cNames.length; i++){
             // добавляем нового кандидата в список
-            allVotes[vIndex].vCandidates.push(Candidate(cId + i, 0, _cNames[i], _cAddresses[i]));
+            allVotes[vIndex].vCandidates.push(Candidate(cId++, 0, _cNames[i], _cAddresses[i]));
         }
     }
 
 // *** ФУНКЦИИ ДОБАВЛЕНИЯ ГОЛОСОВАНИЯ И КАНДИДАДТОВ ***
+
 
 // *** ФУНКЦИИ ИМЕНЕНИЯ ГОЛОСОВАНИЯ И КАНДИДАДТОВ ***
 
@@ -192,7 +185,7 @@ V_2
     )
         external
         onlyOwner
-        voitesDontStart(--_vId)
+        voteDontStart(--_vId)
     {
         allVotes[_vId].vName = _vName;
     }
@@ -203,12 +196,12 @@ V_2
     function changeCandidate(
         uint _vId,
         uint _cId,
-        address _cAddress,
-        string memory _cName
+        string memory _cName,
+        address _cAddress
     )
         external
         onlyOwner
-        voitesDontStart(--_vId)
+        voteDontStart(--_vId)
     { 
         if(keccak256(bytes(allVotes[_vId].vCandidates[--_cId].cName)) != keccak256(bytes(_cName))){
             allVotes[_vId].vCandidates[_cId].cName = _cName;
@@ -233,9 +226,10 @@ V_2
     )
         external
         onlyOwner
-        voitesDontStart(--_vId)
+        voteDontStart(--_vId)
     {
-        require(allVotes[allVotes.length - 1].vStatusStart == false, "Ne VOZMOZHNO");
+        require(allVotes[allVotes.length - 1].vStatusStart == false,
+        "It is impossible to delete a vote if the last voting in the list has already started");
 
         if(_vId == allVotes.length - 1){
             // Если это последнее голосование в списке - просто удаляем его
@@ -258,7 +252,7 @@ V_2
     )
         external
         onlyOwner
-        voitesDontStart(--_vId)
+        voteDontStart(--_vId)
     {
         uint lastIndex = allVotes[_vId].vCandidates.length - 1;
         // на позицию удаляемого кандидадат записываем данные кандидата из конца списка
@@ -279,9 +273,10 @@ V_2
     )
         external
         onlyOwner
+        voteDontStart(--_vId)
     {
         // Начинаем голосование
-        allVotes[--_vId].vStatusStart = true;
+        allVotes[_vId].vStatusStart = true;
         // Сохраняем время начала голосования
         allVotes[_vId].vStartTime = block.timestamp;
     }
@@ -294,18 +289,24 @@ V_2
         external
         payable
     {
+        // проверка, что голосование началось
+        require(allVotes[--_vId].vStatusStart == true,
+        "Voting has not yet started");
         // проверка, что голосование ещё не закончилось - не прошло 3 дня с его старта
-        require(block.timestamp < allVotes[_vId].vStartTime + 3 days, "");
+        require(block.timestamp < allVotes[_vId].vStartTime + 3 days,
+        "Voting time is over");
         // проверка, что с этого адреса ещё не голосовали
-        require(allVotes[_vId].vVoters[msg.sender] == false, "");
+        require(allVotes[_vId].vVoters[msg.sender] == false,
+        "You already voted");
         // проверка, что голосующий внёс достаточно средства
-        require(msg.value == 10000000000000000, "");
+        require(msg.value == 10000000000000000,
+        "Send 0.01 ETH to vote");
         // увеличиваем количество голосов за конкретного кандидадата
-        allVotes[_vId].vCandidates[_cId].cVotes++;
+        allVotes[_vId].vCandidates[--_cId].cVotes++;
         // увеличиваем общее количество голосв в данном голосовании
         allVotes[_vId].vTotal++;
         // отмечаем адрес как проголосовавший
-        allVotes[_vId].vVoters[msg.sender] == true;
+        allVotes[_vId].vVoters[msg.sender] = true;
     }
 
     // функция окончания голосования
@@ -315,9 +316,11 @@ V_2
         external
     {
         // проверка, что голосование закончилось - прошло 3 дня с его старта
-        require(block.timestamp > allVotes[_vId].vStartTime + 3 days, "");
+        require(block.timestamp > allVotes[--_vId].vStartTime + 3 days,
+        "You can't finish voting - it hasn't been three days yet");
         // проверка, что голосование не было завершено ранее
-        require(allVotes[_vId].vStatusEnd == false, "");
+        require(allVotes[_vId].vStatusEnd == false,
+        "Voting is now over");
 
         // выставляем статус, что голосование завершено
         allVotes[_vId].vStatusEnd = true;
@@ -352,6 +355,8 @@ V_2
                 break;
             }
         }
+        // оставшуюся комиссию теперь можно вывести
+        fee += 10000000000000000 * allVotes[_vId].vTotal - allVotes[_vId].vWinningAmount * allVotes[_vId].vIdWinners.length;
     }
 
 // *** ФУНКЦИИ СТАРТА, ГОЛОСОВАНИЯ И ОКОНЧАНИЯ ***
@@ -361,48 +366,56 @@ V_2
 
     // функция для получения списка вообще всех голосований - РАБОТАЕТ РЕФАКТОР
     function getallVotes()external view returns(VoteInfo[] memory){
-        return getVoites(false, false, true);
+        return getVotes(true, false, false);
     }
     // функция для получения списка всех текущих голосований - ТУТ что-то ломается
     function getCurrentVoites()external view returns(VoteInfo[] memory){
-        return getVoites(true, false, false);
+        return getVotes(false, true, false);
     }
     // функция для получения списка всех законченных голосований - ТУТ что-то ломается
     function getEndVoites()external view returns(VoteInfo[] memory){
-        return getVoites(true, true, false);
+        return getVotes(false, true, true);
     }
 
     // функция для получения списка всех голосований
-    function getVoites(
+    function getVotes(
+        bool _all,
         bool _start,
-        bool _end,
-        bool _all
+        bool _end
     )
         private
         view
         returns(VoteInfo[] memory)
     {
-        VoteInfo[] memory votes = new VoteInfo[](allVotes.length);
-
+        uint countVotes = 0;
         for (uint i = 0; i < allVotes.length; i++){
-            if(_all || allVotes[i].vStatusStart == _start && allVotes[i].vStatusEnd != _end){
-                votes[i].vId = allVotes[i].vId;
-                votes[i].vStartTime = allVotes[i].vStartTime;
-                votes[i].vTotal = allVotes[i].vTotal;
-                votes[i].vCandidateCount = allVotes[i].vCandidates.length;
-                votes[i].vWinnersCount = allVotes[i].vIdWinners.length;
-                votes[i].vWinningAmount = allVotes[i].vWinningAmount;
-                votes[i].vName = allVotes[i].vName;
-                votes[i].vStatusStart = allVotes[i].vStatusStart;
-                votes[i].vStatusEnd = allVotes[i].vStatusEnd;
-                votes[i].vCandidates = allVotes[i].vCandidates;
-                votes[i].vIdWinners = allVotes[i].vIdWinners;
+            if(_all || allVotes[i].vStatusStart == _start && allVotes[i].vStatusEnd == _end){
+                countVotes++;
+            }
+        }
+        VoteInfo[] memory votes = new VoteInfo[](countVotes);
+        uint j = 0;
+        for (uint i = 0; i < allVotes.length; i++){
+            if(_all || allVotes[i].vStatusStart == _start && allVotes[i].vStatusEnd == _end){
+                votes[j].vId = allVotes[i].vId;
+                votes[j].vStartTime = allVotes[i].vStartTime;
+                votes[j].vTotal = allVotes[i].vTotal;
+                votes[j].vCandidateCount = allVotes[i].vCandidates.length;
+                votes[j].vWinnersCount = allVotes[i].vIdWinners.length;
+                votes[j].vWinningAmount = allVotes[i].vWinningAmount;
+                votes[j].vName = allVotes[i].vName;
+                votes[j].vStatusStart = allVotes[i].vStatusStart;
+                votes[j].vStatusEnd = allVotes[i].vStatusEnd;
+                votes[j].vCandidates = allVotes[i].vCandidates;
+                votes[j].vIdWinners = allVotes[i].vIdWinners;
+                j++;
             }
         }
         return votes;
     }
 
-    function getVotesByIDd(
+    // функция для получения информации об одном голосовании по его id
+    function getVoteByID(
         uint _vId
     )
         external
@@ -424,15 +437,17 @@ V_2
         return oneVote;
     }
 
-    // функция для получения списка кандидатов из голосования - РАБОТАЕТ РЕФАКТОР
-    function getCandidateByVoites(
+    // функция для получения списка кандидатов из голосования
+    function getCandidateByVote(
         uint _vId
     )
         public
         view
         returns(Candidate[] memory)
     {
-        Candidate[] memory candidateArray = new Candidate[](allVotes[--_vId].vCandidates.length);
+        // проверяем, что в голосовании есть кандидаты
+        require(allVotes[--_vId].vCandidates.length > 0, "No candidates here yet");
+        Candidate[] memory candidateArray = new Candidate[](allVotes[_vId].vCandidates.length);
 
         for(uint i = 0; i < candidateArray.length; i++){
             candidateArray[i].cId = allVotes[_vId].vCandidates[i].cId;
@@ -444,7 +459,7 @@ V_2
     }
 
     // функция для получения списка победителей из голосования
-    function getWinnersByVoites(
+    function getWinnersByVote(
         uint _vId
     )
         public
@@ -452,14 +467,15 @@ V_2
         returns(Candidate[] memory)
     {
         // проверяем, что голосование завершено
-        require(allVotes[--_vId].vStatusEnd == true);
+        require(allVotes[--_vId].vStatusEnd == true, "Voting is not over yet");
         Candidate[] memory winnersArray = new Candidate[](allVotes[_vId].vIdWinners.length);
 
         for(uint i = 0; i < winnersArray.length; i++){
-            winnersArray[i].cId = allVotes[_vId].vCandidates[allVotes[_vId].vIdWinners[i]].cId;
-            winnersArray[i].cVotes = allVotes[_vId].vCandidates[allVotes[_vId].vIdWinners[i]].cVotes;
-            winnersArray[i].cName = allVotes[_vId].vCandidates[allVotes[_vId].vIdWinners[i]].cName;
-            winnersArray[i].cAddress = allVotes[_vId].vCandidates[allVotes[_vId].vIdWinners[i]].cAddress;
+            uint wIndex = allVotes[_vId].vIdWinners[i] - 1;
+            winnersArray[i].cId = allVotes[_vId].vCandidates[wIndex].cId;
+            winnersArray[i].cVotes = allVotes[_vId].vCandidates[wIndex].cVotes;
+            winnersArray[i].cName = allVotes[_vId].vCandidates[wIndex].cName;
+            winnersArray[i].cAddress = allVotes[_vId].vCandidates[wIndex].cAddress;
         }
         return winnersArray;
     }
@@ -467,12 +483,22 @@ V_2
 // *** ФУНКЦИИ ПОЛУЧЕНИЯ ИНФОРМАЦИИ О ГОЛОСОВАНИЯХ И КАНДИДАДАТХ ***
 
 
+
+    // посмотреть сколько средств доступно для вывода
+    function getFee()
+        external
+        view
+        onlyOwner
+        returns(uint)
+    {
+        return fee;
+    }
+
     // вывод средст владельцем контратка
     function withDraw()
         external
         onlyOwner
     {
-        payable(owner).transfer(address(this).balance);
+        payable(owner).transfer(fee);
     }
-
 }
