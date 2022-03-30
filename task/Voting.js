@@ -74,7 +74,7 @@ task("addListCandidatesToVote", "Add candidates to vote")
 
 
 // добавление голосования со списком кандидатов
-task("addVoteAndListCandidates", "Add candidates to vote")
+task("addVoteAndListCandidates", "Create new vote and add candidates to vote")
   .addParam("vName", "Vote name")
   .addParam("cNames", "Candidate names")
   .addParam("cAddresses", "Candidate addressts")
@@ -123,7 +123,7 @@ task("changeVote", "Сhange name vote")
 
 
 // изменение имени и/или адреса кандидата
-task("changeCandidate", "Сhange name vote")
+task("changeCandidate", "Сhange name candidate")
   .addParam("vId", "Vote id")
   .addParam("cId", "Candidate id")
   .addParam("cName", "Candidate name")
@@ -149,7 +149,7 @@ task("changeCandidate", "Сhange name vote")
 
 
 // удаление голосования по его id
-task("delVote", "Create new Vote")
+task("delVote", "Delete Vote")
   .addParam("vId", "Vote id")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
@@ -172,7 +172,7 @@ task("delVote", "Create new Vote")
 
 
 // удаление кандидата из голосования по его id
-task("delCandidateFromVotes", "Create new Vote")
+task("delCandidateFromVotes", "Delete candidate drom votes")
   .addParam("vId", "Vote id")
   .addParam("cId", "Candidate id")
   .setAction(async (taskArgs) => {
@@ -196,7 +196,7 @@ task("delCandidateFromVotes", "Create new Vote")
 
 
 // старт голосования по его id
-task("startVote", "Enter the voting ID")
+task("startVote", "Start vote")
   .addParam("vId", "Vote id")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
@@ -243,7 +243,7 @@ task("vote", "Vote")
 
 
 // завершаение голосования
-task("endVote", "Vote")
+task("endVote", "End vote")
   .addParam("vId", "Vote id")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
@@ -265,7 +265,7 @@ task("endVote", "Vote")
 
 
 // получение голосования по его id
-task("getVoteByID", "Enter the voting ID")
+task("getVoteByID", "Return info about vote")
   .addParam("vId", "Vote id")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
@@ -282,7 +282,7 @@ task("getVoteByID", "Enter the voting ID")
 
 
 // получение списка всех голосований
-task("getallVotes", "Enter the voting ID")
+task("getallVotes", "Return info about vote")
   .setAction(async () => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
@@ -299,7 +299,7 @@ task("getallVotes", "Enter the voting ID")
 
 
 // получение списка идущих голосований
-task("getCurrentVoites", "Enter the voting ID")
+task("getCurrentVoites", "Return info about vote")
   .setAction(async () => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
@@ -316,7 +316,7 @@ task("getCurrentVoites", "Enter the voting ID")
 
 
 // получение списка завершённых голосований
-task("getEndVoites", "Enter the voting ID")
+task("getEndVoites", "Return info about vote")
   .setAction(async () => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
@@ -333,7 +333,7 @@ task("getEndVoites", "Enter the voting ID")
 
 
 // получение списка кандидатов из голосования по его id
-task("getCandidateByVote", "Enter the voting ID")
+task("getCandidateByVote", "Return candidate from vote")
   .addParam("vId", "Vote id")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
@@ -348,7 +348,7 @@ task("getCandidateByVote", "Enter the voting ID")
 });
 
 // получение списка победителей из голосования по его id
-task("getWinnersByVote", "Enter the voting ID")
+task("getWinnersByVote", "Return winner from vot")
   .addParam("vId", "Vote id")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
@@ -364,7 +364,7 @@ task("getWinnersByVote", "Enter the voting ID")
 
 
 // вывод информации о комиссии доступной к выводу
-task("getFee", "Enter the voting ID")
+task("getFee", "Return fee")
   .setAction(async () => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
@@ -379,7 +379,7 @@ task("getFee", "Enter the voting ID")
 
 
 // вывод средств с контракте
-task("withDraw", "Enter the voting ID")
+task("withDraw", "WithDraw fee")
   .setAction(async () => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
