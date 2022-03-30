@@ -4,13 +4,14 @@ pragma experimental ABIEncoderV2;
 
 contract Voting{
 
-    // адрес хозяина контракта
+    // Адрес хозяина контракта
     address owner;
-    // комиссия с каждого голосования становится доступна для вывода,
+    // Комиссия, доступная для вывода
+    // комиссия с каждого голосования становится доступна для вывода
     // только после окончания голосования
     uint fee;
 
-    // структура кандидата
+    // Структура кандидата
     struct Candidate {
         // id кандидата
         uint cId;
@@ -22,7 +23,7 @@ contract Voting{
         address cAddress;
     } 
 
-    // структура голосования
+    // Структура голосования
     struct Vote{
         // id голосования
         uint vId;
@@ -34,9 +35,9 @@ contract Voting{
         uint vWinningAmount;
         // название голосования
         string vName;
-        // статус голосования - не началось/началось
+        // статус голосования - началось/не началось
         bool vStatusStart;
-        // статус голосования - не закончилось/закончилось
+        // статус голосования - закончилось/не закончилось
         bool vStatusEnd;
         // кандидаты
         Candidate[] vCandidates;
@@ -46,10 +47,10 @@ contract Voting{
         mapping(address => bool) vVoters;
     }
 
-    // Со структурой выше удобно работать, но её невозможно вернуть из функции,
+    // Со структурой Vote удобно работать, но её невозможно вернуть из функции,
     // так как в ней лежит словарь
-    // Структура ниже используется для вывода информации о выборах
-    // в ней нету словаря и есть некоторая дополнительная информация
+    // Структура VoteInfo используется для вывода информации о выборах
+    // в ней нету словаря, но есть некоторая дополнительная информация
     struct VoteInfo{
         // id голосования
         uint vId;
@@ -59,15 +60,15 @@ contract Voting{
         uint vTotal;
         // количество кандидатов
         uint vCandidateCount;
-        // количество выигрывших кандидатов
+        // количество выигравших кандидатов
         uint vWinnersCount;
         // выигрыш победившего кандидата/кандидатов
         uint vWinningAmount;
         // название голосования
         string vName;
-        // статус голосования - не началось/началось
+        // статус голосования - началось/не началось
         bool vStatusStart;
-        // статус голосования - не закончилось/закончилось
+        // статус голосования - закончилось/не закончилось
         bool vStatusEnd;
         // кандидаты
         Candidate[] vCandidates;
@@ -78,7 +79,6 @@ contract Voting{
     // Массив структур Vote - каждый элемент этого массива - отдельное голосование
     Vote[] allVotes;
 
-    // проверяем, что функцию вызывает owner
     modifier onlyOwner(){
         require(msg.sender == owner,
         "Only the host can add, change, delete votes and candidates");
@@ -87,7 +87,8 @@ contract Voting{
 
     // проверка, что голосование не началось
     // нужно для редактирования голосований и списков кандидатов
-    // не честно изменять голосование, добавлять/редактировать/убирать кандидадтов во время голосования
+    // не честно изменять голосование, добавлять/редактировать/убирать
+    // кандидатов во время голосования
     modifier voteDontStart(uint _vId){
         require(allVotes[_vId].vStatusStart == false,
         "Voting has begun. You cannot change or delete it");
@@ -98,11 +99,15 @@ contract Voting{
         owner = msg.sender;
     }
 
-
 // *** ФУНКЦИИ ДОБАВЛЕНИЯ ГОЛОСОВАНИЯ И КАНДИДАДТОВ ***
 
-    // функция добавления нового голосования
-    function addVote(string calldata _vName)external onlyOwner{
+    // Функция добавления нового голосования
+    function addVote(
+        string calldata _vName
+    )
+        external
+        onlyOwner
+    {
         // добавляем голосование
         allVotes.push();
         // сохраняем индекс для удобства
@@ -113,8 +118,8 @@ contract Voting{
         allVotes[vIndex].vId = vIndex + 1;
     }
 
-    // функция добавления одного нового кандидата в голосование
-    function addCandidateToVotes(
+    // Функция добавления одного нового кандидата в голосование
+    function addCandidateToVote(
         uint _vId,
         string calldata _cName,
         address _cAddress
@@ -129,8 +134,8 @@ contract Voting{
         allVotes[_vId].vCandidates.push(Candidate(cId, 0, _cName, _cAddress));
     }
 
-    // функция добавления кандидатов в голосование списокм
-    function addListCandidatesToVotes(
+    // Функция добавления кандидатов в голосование списком
+    function addListCandidatesToVote(
         uint _vId,
         string[] calldata _cNames,
         address[] calldata _cAddresses
@@ -148,8 +153,8 @@ contract Voting{
         }
     }
 
-    // ультра-функция добавления нового голосования сразу со списком кандидатов
-    function addVotesAndListCandidates(
+    // Ультра-функция добавления нового голосования сразу со списком кандидатов
+    function addVoteAndListCandidates(
         string calldata _vName, 
         string[] calldata _cNames,
         address[] calldata _cAddresses
@@ -167,6 +172,7 @@ contract Voting{
         allVotes[vIndex].vId = vIndex + 1;
         // id кандидата
         uint cId = 1;
+        // добавляем кандидатов
         for(uint i = 0; i < _cNames.length; i++){
             // добавляем нового кандидата в список
             allVotes[vIndex].vCandidates.push(Candidate(cId++, 0, _cNames[i], _cAddresses[i]));
@@ -176,7 +182,7 @@ contract Voting{
 // *** ФУНКЦИИ ДОБАВЛЕНИЯ ГОЛОСОВАНИЯ И КАНДИДАДТОВ ***
 
 
-// *** ФУНКЦИИ ИМЕНЕНИЯ ГОЛОСОВАНИЯ И КАНДИДАДТОВ ***
+// *** ФУНКЦИИ ИЗМЕНЕНИЯ ГОЛОСОВАНИЯ И КАНДИДАДТОВ ***
 
     // Функция изменения голосования - можно поменять имя
     function changeVote(
@@ -190,8 +196,8 @@ contract Voting{
         allVotes[_vId].vName = _vName;
     }
 
-    // Функция изменения кандидадат - можно поменять имя и адрес
-    // если меняете что-то одно, то всё равно надо передать два рагумента
+    // Функция изменения кандидата - можно поменять имя и/или адрес
+    // если меняете что-то одно, то всё равно надо передать два аргумента,
     // но для экономии газа будут перезаписаны только обновляемые значения
     function changeCandidate(
         uint _vId,
@@ -216,12 +222,12 @@ contract Voting{
 
 // *** ФУНКЦИИ УДАЛЕНИЯ ГОЛОСОВАНИЯ И КАНДИДАДТОВ ***
 
-    // функция удаления голосования
-    // Исходим из идеи, что индекс и id начавшего голосования изменятся не должен
-    // Поэтому данная функция может сработать, только если:
-    // 1. это голосование ещё не началось
-    // 2. это последнее голосование списке или последнее голосование в списке не начлось
-    function delVotes(
+    // Функция удаления голосования
+    // исходим из идеи, что индекс и id начавшегося голосования изменятся не должны
+    // поэтому голосование можно удлаить при соблюдении двух условий:
+    // 1. оно ещё не началось
+    // 2. оно является последним в списке или последнее голосование в списке не началось
+    function delVote(
         uint _vId
     )
         external
@@ -230,14 +236,13 @@ contract Voting{
     {
         require(allVotes[allVotes.length - 1].vStatusStart == false,
         "It is impossible to delete a vote if the last voting in the list has already started");
-
+        // если это последнее голосование в списке - просто удаляем его
         if(_vId == allVotes.length - 1){
-            // Если это последнее голосование в списке - просто удаляем его
             allVotes.pop();
         } else {
-            // если не последнее, то перезаписываем имя
+            // если не последнее, то перезаписываем в него имя
             allVotes[_vId].vName = allVotes[allVotes.length - 1].vName;
-            // и список кандидатов из последнего
+            // и список кандидатов из последнего голосования
             allVotes[_vId].vCandidates = allVotes[allVotes.length - 1].vCandidates;
             // id даже и изменять не надо
             // последнее голосование из списка просто удаляем
@@ -245,7 +250,7 @@ contract Voting{
         }
     }
 
-    // функция удаления одного кандидата из списка
+    // Функция удаления одного кандидата из списка
     function delCandidateFromVotes(
         uint _vId,
         uint _cId
@@ -255,10 +260,10 @@ contract Voting{
         voteDontStart(--_vId)
     {
         uint lastIndex = allVotes[_vId].vCandidates.length - 1;
-        // на позицию удаляемого кандидадат записываем данные кандидата из конца списка
+        // на позицию удаляемого кандидата записываем данные кандидата из конца списка
         allVotes[_vId].vCandidates[_cId - 1].cName = allVotes[_vId].vCandidates[lastIndex].cName;
         allVotes[_vId].vCandidates[_cId - 1].cAddress = allVotes[_vId].vCandidates[lastIndex].cAddress;
-        // удаляем последнего кандидадата из списка
+        // удаляем последнего кандидата из списка
         allVotes[_vId].vCandidates.pop();
     }
 
@@ -275,13 +280,13 @@ contract Voting{
         onlyOwner
         voteDontStart(--_vId)
     {
-        // Начинаем голосование
+        // начинаем голосование
         allVotes[_vId].vStatusStart = true;
-        // Сохраняем время начала голосования
+        // сохраняем время начала голосования
         allVotes[_vId].vStartTime = block.timestamp;
     }
 
-    // Функция голосования - РАБОТАЕТ _ РЕФАКТОР
+    // Функция голосования
     function vote(
         uint _vId,
         uint _cId
@@ -289,48 +294,49 @@ contract Voting{
         external
         payable
     {
-        // проверка, что голосование началось
+        // проверки
+        // что голосование началось
         require(allVotes[--_vId].vStatusStart == true,
         "Voting has not yet started");
-        // проверка, что голосование ещё не закончилось - не прошло 3 дня с его старта
+        // что голосование ещё не закончилось - не прошло 3 дня с его старта
         require(block.timestamp < allVotes[_vId].vStartTime + 3 days,
         "Voting time is over");
-        // проверка, что с этого адреса ещё не голосовали
+        // что с этого адреса ещё не голосовали
         require(allVotes[_vId].vVoters[msg.sender] == false,
         "You already voted");
-        // проверка, что голосующий внёс достаточно средства
+        // что голосующий внёс достаточно средства
         require(msg.value == 10000000000000000,
         "Send 0.01 ETH to vote");
-        // увеличиваем количество голосов за конкретного кандидадата
+        // увеличиваем количество голосов за конкретного кандидата
         allVotes[_vId].vCandidates[--_cId].cVotes++;
-        // увеличиваем общее количество голосв в данном голосовании
+        // увеличиваем общее количество голосов в данном голосовании
         allVotes[_vId].vTotal++;
         // отмечаем адрес как проголосовавший
         allVotes[_vId].vVoters[msg.sender] = true;
     }
 
-    // функция окончания голосования
+    // Функция окончания голосования
     function endVote(
         uint _vId
     )
         external
     {
-        // проверка, что голосование закончилось - прошло 3 дня с его старта
+        // проверки
+        // что голосование закончилось - прошло 3 дня с его старта
         require(block.timestamp > allVotes[--_vId].vStartTime + 3 days,
         "You can't finish voting - it hasn't been three days yet");
-        // проверка, что голосование не было завершено ранее
+        // что голосование не было завершено ранее
         require(allVotes[_vId].vStatusEnd == false,
         "Voting is now over");
 
         // выставляем статус, что голосование завершено
         allVotes[_vId].vStatusEnd = true;
 
+        // находим:
         // максимальное количество голосов за кандидата
         uint maxVote = 0;
         // количество победителей
         uint winnersCount = 0;
-        
-        // узнаём сколько голосов набрали победители и сколько у нас победителей
         for(uint i = 0; i < allVotes[_vId].vCandidates.length; i++){
             if(allVotes[_vId].vCandidates[i].cVotes > maxVote){
                 maxVote = allVotes[_vId].vCandidates[i].cVotes;
@@ -340,12 +346,12 @@ contract Voting{
                 winnersCount += 1;
             }
         }
-        // находим какую сумму выигрыл каждый победитель
+        // находим какую сумму выиграл каждый победитель
         allVotes[_vId].vWinningAmount = 9000000000000000 * allVotes[_vId].vTotal / winnersCount;
         // кидаем деньги на счёт каждому победителю
         for(uint i = 0; i < allVotes[_vId].vCandidates.length; i++){
             if(allVotes[_vId].vCandidates[i].cVotes == maxVote){
-                // Отправить средства на адрес победившего кандидата
+                // Отправляем средства на адрес победившего кандидата
                 payable(allVotes[_vId].vCandidates[i].cAddress).transfer(allVotes[_vId].vWinningAmount);
                 // добавляем адрес победителя в список победителей 
                 allVotes[_vId].vIdWinners.push(allVotes[_vId].vCandidates[i].cId);
@@ -362,22 +368,22 @@ contract Voting{
 // *** ФУНКЦИИ СТАРТА, ГОЛОСОВАНИЯ И ОКОНЧАНИЯ ***
 
 
-// *** ФУНКЦИИ ПОЛУЧЕНИЯ ИНФОРМАЦИИ О ГОЛОСОВАНИЯХ И КАНДИДАДАТХ ***
+// *** ФУНКЦИИ ПОЛУЧЕНИЯ ИНФОРМАЦИИ О ГОЛОСОВАНИЯХ И КАНДИДАТАХ ***
 
-    // функция для получения списка вообще всех голосований - РАБОТАЕТ РЕФАКТОР
+    // Функция для получения списка вообще всех голосований
     function getallVotes()external view returns(VoteInfo[] memory){
         return getVotes(true, false, false);
     }
-    // функция для получения списка всех текущих голосований - ТУТ что-то ломается
+    // Функция для получения списка всех идущих голосований
     function getCurrentVoites()external view returns(VoteInfo[] memory){
         return getVotes(false, true, false);
     }
-    // функция для получения списка всех законченных голосований - ТУТ что-то ломается
+    // Функция для получения списка всех законченных голосований
     function getEndVoites()external view returns(VoteInfo[] memory){
         return getVotes(false, true, true);
     }
 
-    // функция для получения списка всех голосований
+    // Функция для получения списка голосований в зависимости от параметров
     function getVotes(
         bool _all,
         bool _start,
@@ -387,12 +393,14 @@ contract Voting{
         view
         returns(VoteInfo[] memory)
     {
+        // сначала необходимо определить сколько голосований подходят под параметры
         uint countVotes = 0;
         for (uint i = 0; i < allVotes.length; i++){
             if(_all || allVotes[i].vStatusStart == _start && allVotes[i].vStatusEnd == _end){
                 countVotes++;
             }
         }
+        // создаём массив с голосованиями, заполняем его необходимыми данными и возвращаем
         VoteInfo[] memory votes = new VoteInfo[](countVotes);
         uint j = 0;
         for (uint i = 0; i < allVotes.length; i++){
@@ -414,7 +422,7 @@ contract Voting{
         return votes;
     }
 
-    // функция для получения информации об одном голосовании по его id
+    // Функция для получения информации об одном голосовании по его id
     function getVoteByID(
         uint _vId
     )
@@ -422,7 +430,7 @@ contract Voting{
         view
         returns(VoteInfo memory)
     {
-        // проверка, что такое id существует
+        // проверка, что такой id существует
         require(allVotes.length > --_vId, "There is no vote with this id");
         VoteInfo  memory oneVote;
         oneVote.vId = allVotes[_vId].vId;
@@ -439,7 +447,7 @@ contract Voting{
         return oneVote;
     }
 
-    // функция для получения списка кандидатов из голосования
+    // Функция для получения списка кандидатов из голосования
     function getCandidateByVote(
         uint _vId
     )
@@ -447,20 +455,13 @@ contract Voting{
         view
         returns(Candidate[] memory)
     {
-        // проверяем, что в голосовании есть кандидаты
+        // проверка, что в голосовании есть кандидаты
         require(allVotes[--_vId].vCandidates.length > 0, "No candidates here yet");
-        Candidate[] memory candidateArray = new Candidate[](allVotes[_vId].vCandidates.length);
-
-        for(uint i = 0; i < candidateArray.length; i++){
-            candidateArray[i].cId = allVotes[_vId].vCandidates[i].cId;
-            candidateArray[i].cVotes = allVotes[_vId].vCandidates[i].cVotes;
-            candidateArray[i].cName = allVotes[_vId].vCandidates[i].cName;
-            candidateArray[i].cAddress = allVotes[_vId].vCandidates[i].cAddress;
-        }
-        return candidateArray;
+        // возвращаем список кандидатов
+        return allVotes[_vId].vCandidates;
     }
 
-    // функция для получения списка победителей из голосования
+    // Функция для получения списка победителей из голосования
     function getWinnersByVote(
         uint _vId
     )
@@ -470,8 +471,8 @@ contract Voting{
     {
         // проверяем, что голосование завершено
         require(allVotes[--_vId].vStatusEnd == true, "Voting is not over yet");
+        // формируем и возвращаем список кандидатов
         Candidate[] memory winnersArray = new Candidate[](allVotes[_vId].vIdWinners.length);
-
         for(uint i = 0; i < winnersArray.length; i++){
             uint wIndex = allVotes[_vId].vIdWinners[i] - 1;
             winnersArray[i].cId = allVotes[_vId].vCandidates[wIndex].cId;
@@ -482,9 +483,10 @@ contract Voting{
         return winnersArray;
     }
 
-// *** ФУНКЦИИ ПОЛУЧЕНИЯ ИНФОРМАЦИИ О ГОЛОСОВАНИЯХ И КАНДИДАДАТХ ***
+// *** ФУНКЦИИ ПОЛУЧЕНИЯ ИНФОРМАЦИИ О ГОЛОСОВАНИЯХ И КАНДИДАТАХ ***
 
 
+// *** ФУНКЦИИ ДЛЯ ВЫВОДА КОМИССИИ ***
 
     // посмотреть сколько средств доступно для вывода
     function getFee()
@@ -496,7 +498,7 @@ contract Voting{
         return fee;
     }
 
-    // вывод средст владельцем контратка
+    // вывод средств владельцем контракта
     function withDraw()
         external
         onlyOwner
@@ -504,3 +506,5 @@ contract Voting{
         payable(owner).transfer(fee);
     }
 }
+
+// Voting deployed to: 0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3

@@ -1,8 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-// тесты в разработке
-
 describe("Voting", function () {
 
     let Voting;
@@ -14,27 +12,27 @@ describe("Voting", function () {
     // для удобства сразу создадим несколько эталонных голосований
     let eVote1, eVote2, eVote3;
 
-    // для удобства создаём массивы
+    // создаём массивы
     // с именами и адресами
-    // голосований, избирателей и кандидадтов
+    // голосований, избирателей и кандидатов
     const vNames = [ "Vote_1", "Vote_2", "Vote_3"];
     let vAddresses;
     let cNames;
     let cAddresses;
-    // Ещё используемые переменные - id голосования и кандидата
+    // id голосования и кандидата
     let vId, cId;
 
     // деплоим контракт
     before(async function(){
-      // Собрали контракт
+      // собрали контракт
       Voting = await ethers.getContractFactory("Voting");
-      // Отправили контракт в деплой
+      // отправили контракт в деплой
       voting = await Voting.deploy();
       // подождали, пока контракт задеплоился
       await voting.deployed();
       // сохраняем адреса хозяина контракта, пяти избирателей и четырёх кандидатов
       [owner, voter1, voter2, voter3, voter4, voter5, candidate1, candidate2, candidate3, candidate4] = await ethers.getSigners();
-      // для удобства создаём массивы с именами и адресами избирателей и кандидатов
+      // массивы с именами и адресами избирателей и кандидатов
       cNames = [ "Candidate_1", "Candidate_2", "Candidate_3", "Candidate_4" ]
       cAddresses = [ candidate1.address, candidate2.address, candidate3.address, candidate4.address ]
       vAddresses = [ voter1.address, voter2.address, voter3.address, voter4.address, voter5.address ]
@@ -42,8 +40,8 @@ describe("Voting", function () {
       eVote1 = getVote();
       eVote2 = getVote();
       eVote3 = getVote();
-      eVote4 = getVote();
     })
+
 
     // Проверка функции addVote()
     it("Check addVote()", async function(){
@@ -52,9 +50,9 @@ describe("Voting", function () {
       const tx = await voting.addVote(_vName = vNames[0]);
       await tx.wait();
 
-      // получаем информацию о первом голосовании
+      // получаем информацию о голосовании
       const response  = await voting.getVoteByID(vId);
-      // генерируем удобный для проверки вид
+      // преобразуем в удобный вид
       const vote1 = getVote(response);
 
       // изменяем значения эталонного голосования
@@ -67,15 +65,16 @@ describe("Voting", function () {
       expect(vote1).deep.to.equal(eVote1);
     })
 
-    // проверка функции addCandidateToVotes()
-    it("Check addCandidateToVotes()", async function(){
-      // добавляем одного кандидата в ранее созданный список
-      const tx = await voting.addCandidateToVotes(_vId = vId, _cName = cNames[0], _cAddress = cAddresses[0]);
+
+    // проверка функции addCandidateToVote()
+    it("Check addCandidateToVote()", async function(){
+      // добавляем одного кандидата в ранее созданное голосование
+      const tx = await voting.addCandidateToVote(_vId = vId, _cName = cNames[0], _cAddress = cAddresses[0]);
       await tx.wait();
 
-      // получаем информацию о первом голосовании
+      // получаем информацию о голосовании
       const response  = await voting.getVoteByID(vId);
-      // генерируем удобный для проверки вид
+      // преобразуем в удобный вид
       const vote1 = getVote(response);
 
       // изменяем значения эталонного голосования
@@ -87,16 +86,18 @@ describe("Voting", function () {
       expect(vote1).deep.to.equal(eVote1);
     })
 
-    // проверка функции addListCandidatesToVotes
-    it("Check addListCandidatesToVotes()", async function(){
+
+    // проверка функции addListCandidatesToVote
+    it("Check addListCandidatesToVote()", async function(){
       // добавляем список кандидатов в ранее созданное голосование
-      const tx = await voting.addListCandidatesToVotes(
-        _vId = 1, _cNames = [cNames[1], cNames[2]], _cAddresses = [cAddresses[1], cAddresses[2]]);
+      vId = 1;
+      const tx = await voting.addListCandidatesToVote(
+        _vId = vId, _cNames = [cNames[1], cNames[2]], _cAddresses = [cAddresses[1], cAddresses[2]]);
       await tx.wait();
 
-      // получаем информацию о первом голосовании
-      const response  = await voting.getVoteByID(1);
-      // генерируем удобный для проверки вид
+      // получаем информацию о голосовании
+      const response  = await voting.getVoteByID(vId);
+      // преобразуем в удобный вид
       const vote1 = getVote(response);
 
       // изменяем значения эталонного голосования
@@ -108,15 +109,17 @@ describe("Voting", function () {
       expect(vote1).deep.to.equal(eVote1);
     })
 
-    // проверка функции addVotesAndListCandidates()
-    it("Check addVotesAndListCandidates()", async function(){
+
+    // проверка функции addVoteAndListCandidates()
+    it("Check addVoteAndListCandidates()", async function(){
       // добавляем новое голосование сразу со списоком кандидатов
-      const tx = await voting.addVotesAndListCandidates(_vName = vNames[1], _cNames = cNames, _cAddresses = cAddresses);
+      const tx = await voting.addVoteAndListCandidates(
+        _vName = vNames[1], _cNames = cNames, _cAddresses = cAddresses);
       await tx.wait();
 
-      // получаем информацию о первом голосовании
+      // получаем информацию о голосовании
       const response  = await voting.getVoteByID(2);
-      // генерируем удобный для проверки вид
+      // преобразуем в удобный вид
       const vote2 = getVote(response);
 
       // изменяем значения эталонного голосования
@@ -130,17 +133,17 @@ describe("Voting", function () {
       expect(vote2).deep.to.equal(eVote2);
     })
 
+
     // проверка функции startVote()
     it("Check startVote()", async function(){
       // Стартуем голосование номер 2
       vId = 2;
-
       const tx = await voting.startVote(_vId = vId);
       await tx.wait();
 
-      // получаем обновлённую информацию о втором голосовании
+      // получаем обновлённую информацию о голосовании
       response = await voting.getVoteByID(vId);
-      // генерируем удобный для проверки вид
+      // преобразуем в удобный вид
       vote2 = getVote(response);
 
       // изменяем значения эталонного голосования
@@ -156,34 +159,37 @@ describe("Voting", function () {
       expect(vote2).deep.to.equal(eVote2);
     })
 
-    // проверка функции delVotes()
-    it("Check delVotes()", async function(){
+
+    // проверка функции delVote()
+    it("Check delVote()", async function(){
       // Исходим из идеи, что индекс и id начавшего голосования изменятся не должен
       // Поэтому данная функция может сработать, только если:
       // 1. это голосование ещё не началось
-      // 2. это последнее голосование списке или последнее голосование в списке не начлось
+      // 2. это последнее голосование списке или последнее голосование в списке не началось
 
       // На данный момент второе голосование уже началось,
       // проверим, что его нельзя удалить
       vId = 2;
       await expect(
-        voting.delVotes(_vId = vId)
+        voting.delVote(_vId = vId)
       ).to.be.revertedWith("Voting has begun. You cannot change or delete it");
       
       // Также проверим, что нельзя удалять не начавшееся голосование,
       // если последнее в списке голосование уже начато
       vId = 1;
       await expect(
-        voting.delVotes(_vId = vId)
+        voting.delVote(_vId = vId)
       ).to.be.revertedWith("It is impossible to delete a vote if the last voting in the list has already started");
 
+
       // Добавим ещё одно голосование
-      let tx = await voting.addVotesAndListCandidates(_vName = vNames[0], _cNames = cNames, _cAddresses = cAddresses);
+      let tx = await voting.addVoteAndListCandidates(
+        _vName = vNames[0], _cNames = cNames, _cAddresses = cAddresses);
       await tx.wait();
 
       // получаем информацию о третьем голосовании
       let response  = await voting.getVoteByID(3);
-      // генерируем удобный для проверки вид
+      // преобразуем в удобный вид
       let vote3 = getVote(response);
 
       // изменяем значения эталонного голосования
@@ -195,14 +201,14 @@ describe("Voting", function () {
       expect(vote3).deep.to.equal(eVote3);
 
       // снове пробуем удалить первое голосование
-      tx  = await voting.delVotes(_vId = vId);
+      tx  = await voting.delVote(_vId = vId);
       await tx.wait();
 
       // получаем обновлённую информацию о третьем голосовании
       // оно должно занять позицию удалённого голосования в списке
       // vId должен измениться на 1
       response  = await voting.getVoteByID(_vId = vId);
-      // генерируем удобный для проверки вид
+      // преобразуем в удобный вид
       vote3 = getVote(response);
 
       // изменяем значения эталонного голосования
@@ -214,7 +220,7 @@ describe("Voting", function () {
       expect(vote3).deep.to.equal(eVote3);
 
       // поскольку первое голосование было удалено,
-      // перезапишем и первое эталонное голосование
+      // перезапишем третье эталонное голосование в первое эталонное голосование
       eVote1 = eVote3;
 
       // теперь добавим голосование в конец списка и удалим его
@@ -225,7 +231,7 @@ describe("Voting", function () {
 
       // получаем информацию о третьем голосовании
       response  = await voting.getVoteByID(vId);
-      // генерируем удобный для проверки вид
+      // преобразуем в удобный вид
       vote3 = getVote(response);
 
       // скидываем значения эталонного голосования на дефолт
@@ -238,15 +244,16 @@ describe("Voting", function () {
       expect(vote3).deep.to.equal(eVote3);
 
       // удаляем третье голосование
-      tx  = await voting.delVotes(_vId = vId);
+      tx  = await voting.delVote(_vId = vId);
       await tx.wait();
 
       // пробуем получить его значение
-      // должен сработать require, так как этого голосования больше нету
+      // должен сработать require, так как этого голосования больше нет
       await expect(
         voting.getVoteByID(_vId = vId)
       ).to.be.revertedWith("There is no vote with this id");
     })
+
 
     // проверка функции changeVote()
     it("Check changeVote()", async function(){
@@ -259,7 +266,7 @@ describe("Voting", function () {
       // получаем обновлённую информацию о первом голосовании,
       // которое ранее было третьим
       const response  = await voting.getVoteByID(1);
-      // генерируем удобный для проверки вид
+      // преобразуем в удобный вид
       const vote1 = getVote(response);
 
       // изменяем значения эталонного голосования
@@ -271,6 +278,7 @@ describe("Voting", function () {
       expect(vote1).deep.to.equal(eVote1);
     })
 
+
     // проверка функции delCandidateFromVotes()
     it("Check delCandidateFromVotes()", async function(){
       // удалим одного кандидата
@@ -281,7 +289,7 @@ describe("Voting", function () {
 
       // получаем обновлённую информацию о первом голосовании,
       // которое ранее было третьим
-      const response  = await voting.getVoteByID(1);
+      const response  = await voting.getVoteByID(vId);
       // генерируем удобный для проверки вид
       const vote1 = getVote(response);
 
@@ -294,6 +302,7 @@ describe("Voting", function () {
       // сравниваем результаты
       expect(vote1).deep.to.equal(eVote1);
     })
+
 
     // проверка функции changeCandidate()
     it("Check changeCandidate()", async function(){
@@ -359,7 +368,7 @@ describe("Voting", function () {
     it("Check onlyOwner()", async function(){
       // попытаемся вызвать функции
       // добавления, изменения, удаления
-      // голосований, кандидадтов
+      // голосований, кандидатов
       // старта голосований
       // не от имени owner
 
@@ -373,17 +382,17 @@ describe("Voting", function () {
 
       // функция добавления кандидата в голосование
       await expect(
-        voting.connect(voter2).addCandidateToVotes(_vId = vId, _cName = cNames[0], _cAddress = cAddresses[0])
+        voting.connect(voter2).addCandidateToVote(_vId = vId, _cName = cNames[0], _cAddress = cAddresses[0])
       ).to.be.revertedWith("Only the host can add, change, delete votes and candidates");
 
       // функция добавления в голосование списка кандидатов
       await expect(
-        voting.connect(voter3).addListCandidatesToVotes(_vId = vId, _cNames = cNames, _cAddresses = cAddresses)
+        voting.connect(voter3).addListCandidatesToVote(_vId = vId, _cNames = cNames, _cAddresses = cAddresses)
       ).to.be.revertedWith("Only the host can add, change, delete votes and candidates");
 
       // функция создания голосования сразу со списком кандидатов
       await expect(
-        voting.connect(voter4).addVotesAndListCandidates(_vName = vNames[0], _cNames = cNames, _cAddresses = cAddresses)
+        voting.connect(voter4).addVoteAndListCandidates(_vName = vNames[0], _cNames = cNames, _cAddresses = cAddresses)
       ).to.be.revertedWith("Only the host can add, change, delete votes and candidates");
 
       // функция изменения голосования
@@ -398,7 +407,7 @@ describe("Voting", function () {
 
       // функция удаления голосования
       await expect(
-        voting.connect(candidate2).delVotes(_vId = vId)
+        voting.connect(candidate2).delVote(_vId = vId)
       ).to.be.revertedWith("Only the host can add, change, delete votes and candidates");
 
       // функция удаления кандидата
@@ -416,7 +425,7 @@ describe("Voting", function () {
     // проверка функций на предмет правильной работы voitesDontStart()
     it("Check voitesDontStart()", async function(){
       // Нельзя измененять или удалять
-      // голосования, кандидадтов
+      // голосования, кандидатов
       // после старта голосований
       // Попробуем изменить/удалить уже начавшееся голосование
 
@@ -425,12 +434,12 @@ describe("Voting", function () {
 
       // функция добавления кандидата в голосование
       await expect(
-        voting.addCandidateToVotes(_vId = vId, _cName = cNames[0], _cAddress = cAddresses[0])
+        voting.addCandidateToVote(_vId = vId, _cName = cNames[0], _cAddress = cAddresses[0])
       ).to.be.revertedWith("Voting has begun. You cannot change or delete it");
 
       // функция добавления в голосование списка кандидатов
       await expect(
-        voting.addListCandidatesToVotes(_vId = vId, _cNames = cNames, _cAddresses = cAddresses)
+        voting.addListCandidatesToVote(_vId = vId, _cNames = cNames, _cAddresses = cAddresses)
       ).to.be.revertedWith("Voting has begun. You cannot change or delete it");
 
       // функция изменения голосования
@@ -445,7 +454,7 @@ describe("Voting", function () {
 
       // функция удаления голосования
       await expect(
-        voting.delVotes(_vId = vId)
+        voting.delVote(_vId = vId)
       ).to.be.revertedWith("Voting has begun. You cannot change or delete it");
 
       // функция удаления кандидата
@@ -547,7 +556,7 @@ describe("Voting", function () {
       // переводим время на 3 дня вперёд
       await ethers.provider.send('evm_increaseTime', [259200]);
 
-      // поробуем проголосовать
+      // проверяем, что теперь нельзя голосовать
       await expect(
         voting.connect(voter1).vote(_vId = vId, _cId = cId)
       ).to.be.revertedWith("Voting time is over");
@@ -562,7 +571,7 @@ describe("Voting", function () {
         voting.connect(voter1).endVote(_vId = vId)
       ).to.be.revertedWith("Voting is now over");
 
-      // получаем обновлённую информацию о завершённом голосовании,
+      // получаем обновлённую информацию о завершённом голосовании
       const response  = await voting.getVoteByID(vId);
       // генерируем удобный для проверки вид
       const vote2 = getVote(response);
@@ -570,7 +579,7 @@ describe("Voting", function () {
       // изменяем значения эталонного голосования
       eVote2.vStatusEnd = true;
 
-      // получим новые значения балансов победителей
+      // получаем новые значения балансов победителей
       const balanceWinnersAfter = await getBalanceWinners(addressWinners);
 
       //console.log(vote2);
@@ -580,13 +589,14 @@ describe("Voting", function () {
 
       //console.log(balanceWinnersBefore);
       //console.log(balanceWinnersAfter);     
-      // Проверим, что балансы победитлей изменились на необходимую сумму
+      // проверяем, что балансы победитлей изменились на необходимую сумму
       for(let i = 0; i < balanceWinnersBefore.length; i++){
         expect(balanceWinnersBefore[i] + eVote2.vWinningAmount)
         .to.equal(balanceWinnersAfter[i]);
       }
     })
 
+    
     // Проверка функций getallVotes(), getCurrentVoites(), getEndVoites()
     it("Check getallVotes(), getCurrentVoites(), getEndVoites()", async function(){
       // для корректной проверки запустим первое голосование
@@ -681,7 +691,7 @@ describe("Voting", function () {
       // сравниваем результаты
       expect(winners).deep.to.equal(eWinners);
 
-      // попробуем получить список победителей из незакончившего голосования
+      // попробуем получить список победителей из не закончившего голосования
       vId = 1;
       await expect(
         voting.getWinnersByVote(_vId = vId)
@@ -709,7 +719,7 @@ describe("Voting", function () {
       // баланс до - комиссия за транзакцию + сумма выведенных средств
       const ownerBalanceAfter = ownerBalanceBefore - fee + amount;
 
-      // рассчитываем новы баланс контракта
+      // рассчитываем новый баланс контракта
       const votingBalanceAfter = votingBalanceBefore - amount;
 
       //console.log(amount);
@@ -720,11 +730,11 @@ describe("Voting", function () {
       // сравниваем результаты
       // проверяем изменение баланса контракта
       expect(await ethers.provider.getBalance(voting.address)).to.equal(votingBalanceAfter);
-
       // проверяем изменение баланса owner
       expect(await ethers.provider.getBalance(owner.address)).to.equal(ownerBalanceAfter);
   })
 });
+
 
 // дефолтная структура для хранения информации о голосовании
 VoteInfo = {
@@ -742,9 +752,9 @@ VoteInfo = {
   vWinningAmount: 0,
   // название голосования
   vName: "",
-  // статус голосования - не началось/началось
+  // статус голосования - началось/не началось
   vStatusStart: false,
-  // статус голосования - не закончилось/закончилось
+  // статус голосования - закончилось/не закончилось
   vStatusEnd: false,
   // кандидаты
   vCandidates: [],
@@ -752,8 +762,8 @@ VoteInfo = {
   vIdWinners: []
 }
 
-// функция для преобразовния значений возвращаемых из контракта
-// информаию о голосованиях в удобоваримую форму
+// функция для преобразования возвращаемой из контракта
+// информации о голосованиях в удобную форму
 function getVote(vote = VoteInfo){
   var newVote = new Object();
   newVote.vId = BigInt(vote.vId);
