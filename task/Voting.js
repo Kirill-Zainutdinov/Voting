@@ -1,3 +1,4 @@
+const { types } = require("hardhat/config")
 require("@nomiclabs/hardhat-web3");
 require("hardhat/config")
 
@@ -8,7 +9,7 @@ task("addVote", "Create new Vote")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
     // вызываем функцию на контракте
     const tx = await voting.addVote(_vName = taskArgs.vName);
     await tx.wait();
@@ -31,7 +32,7 @@ task("addCandidateToVote", "Add candidate to vote")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
 
     // вызываем функцию на контракте
     const tx = await voting.addCandidateToVote(
@@ -47,6 +48,55 @@ task("addCandidateToVote", "Add candidate to vote")
     console.log(vote);
 });
 
+// добавление кандидатов в голосование списком
+task("addListCandidatesToVote", "Add candidates to vote")
+  .addParam("vId", "Vote Id")
+  .addParam("cNames", "Candidate names", [], type = types.json)
+  .addParam("cAddresses", "Candidate addresses", [], type = types.json)
+  .setAction(async (taskArgs) => {
+    // подключаемся к контракту
+    const Voting = await ethers.getContractFactory("Voting");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
+    
+    // вызываем функцию на контракте
+    const tx = await voting.addListCandidatesToVote(
+      _vId = taskArgs.vId, _cNames = taskArgs.cNames, _cAddresses = taskArgs.cAddresses);
+    await tx.wait();
+  
+    // получаем информацию о голосовании
+    const response  = await voting.getVoteByID(_vId = taskArgs.vId);
+    // достаём информацию о голосовании
+    const vote = getVote(response);
+    // выводим информацию о голосовании
+    console.log("Candidates successfully added to the vote")
+    console.log(vote);
+});
+
+
+// добавление голосования со списком кандидатов
+task("addVoteAndListCandidates", "Create new vote and add candidates to vote")
+  .addParam("vName", "Vote name")
+  .addParam("cNames", "Candidate names", [], type = types.json)
+  .addParam("cAddresses", "Candidate addressts", [], type = types.json)
+  .setAction(async (taskArgs) => {
+    // подключаемся к контракту
+    const Voting = await ethers.getContractFactory("Voting");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
+
+    // вызываем функцию на контракте
+    const tx = await voting.addVoteAndListCandidates(
+      _vName = taskArgs.vName, _cNames = taskArgs.cNames, _cAddresses = taskArgs.cAddresses);
+    await tx.wait();
+
+    // получаем информацию о всех голосования
+    const response  = await voting.getallVotes();
+    // достаём информацию о последнем голосовании
+    const vote = getVote(response[response.length - 1]);
+    // выводим информацию о голосовании
+    console.log("Voting has been successfully established")
+    console.log(vote);
+});
+
 
 // изменение названия голосования
 task("changeVote", "Сhange name vote")
@@ -55,7 +105,7 @@ task("changeVote", "Сhange name vote")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
   
     // вызываем функцию на контракте
     const tx = await voting.changeVote(
@@ -81,7 +131,7 @@ task("changeCandidate", "Сhange name candidate")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
   
     // вызываем функцию на контракте
     const tx = await voting.changeCandidate(
@@ -104,7 +154,7 @@ task("delVote", "Delete Vote")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
   
     // смотрим сколько голосований было
     let response  = await voting.getallVotes();
@@ -122,16 +172,16 @@ task("delVote", "Delete Vote")
 
 
 // удаление кандидата из голосования по его id
-task("delCandidateFromVotes", "Delete candidate drom votes")
+task("delCandidateFromVote", "Delete candidate drom votes")
   .addParam("vId", "Vote id")
   .addParam("cId", "Candidate id")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
   
     // вызываем функцию на контракте
-    const tx = await voting.delCandidateFromVotes(
+    const tx = await voting.delCandidateFromVote(
       _vId = taskArgs.vId, _cId = taskArgs.cId);
     await tx.wait();
 
@@ -151,7 +201,7 @@ task("startVote", "Start vote")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
 
     // вызываем функцию на контракте
     const tx = await voting.startVote(
@@ -175,7 +225,7 @@ task("vote", "Vote")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
   
     // вызываем функцию на контракте
     const tx = await voting.vote(
@@ -198,7 +248,7 @@ task("endVote", "End vote")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
   
     // вызываем функцию на контракте
     const tx = await voting.endVote(_vId = taskArgs.vId);
@@ -220,7 +270,7 @@ task("getVoteByID", "Return info about vote")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
 
     // получаем информацию о голосовании
     const response  = await voting.getVoteByID(_vId = taskArgs.vId);
@@ -236,7 +286,7 @@ task("getallVotes", "Return info about vote")
   .setAction(async () => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
 
     // получаем информацию о всех голосованиях
     const responses  = await voting.getallVotes();
@@ -249,11 +299,11 @@ task("getallVotes", "Return info about vote")
 
 
 // получение списка идущих голосований
-task("getCurrentVoites", "Return info about vote")
+task("getCurrentVotes", "Return info about vote")
   .setAction(async () => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
 
     // получаем информацию о всех идущих голосованиях
     const responses  = await voting.getCurrentVoites();
@@ -266,11 +316,11 @@ task("getCurrentVoites", "Return info about vote")
 
 
 // получение списка завершённых голосований
-task("getEndVoites", "Return info about vote")
+task("getEndVotes", "Return info about vote")
   .setAction(async () => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
 
     // получаем информацию о всех завершённых голосованиях
     const responses  = await voting.getEndVoites();
@@ -288,7 +338,7 @@ task("getCandidateByVote", "Return candidate from vote")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
 
     // получаем информацию о кандидатах из голосования
     const response  = await voting.getCandidateByVote(_vId = taskArgs.vId);
@@ -303,7 +353,7 @@ task("getWinnersByVote", "Return winner from vot")
   .setAction(async (taskArgs) => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
 
     // получаем информацию о победителях из голосования
     const response  = await voting.getWinnersByVote(_vId = taskArgs.vId);
@@ -318,7 +368,7 @@ task("getFee", "Return fee")
   .setAction(async () => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
 
     // вызываем фукнцию на контракте
     const fee = await voting.getFee();
@@ -333,7 +383,7 @@ task("withDraw", "WithDraw fee")
   .setAction(async () => {
     // подключаемся к контракту
     const Voting = await ethers.getContractFactory("Voting");
-    const voting = await Voting.attach("0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3");
+    const voting = await Voting.attach("0x44bA6F954746399c74968d7ce49befdEb6aa9EdE");
 
     // вызываем фукнцию на контракте
     await voting.withDraw();

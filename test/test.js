@@ -162,6 +162,7 @@ describe("Voting", function () {
 
     // проверка функции delVote()
     it("Check delVote()", async function(){
+      
       // Исходим из идеи, что индекс и id начавшего голосования изменятся не должен
       // Поэтому данная функция может сработать, только если:
       // 1. это голосование ещё не началось
@@ -279,12 +280,12 @@ describe("Voting", function () {
     })
 
 
-    // проверка функции delCandidateFromVotes()
-    it("Check delCandidateFromVotes()", async function(){
+    // проверка функции delCandidateFromVote()
+    it("Check delCandidateFromVote()", async function(){
       // удалим одного кандидата
       vId = 1;
       cId = 4;
-      const tx = await voting.delCandidateFromVotes(_vId = vId, _cId = cId);
+      const tx = await voting.delCandidateFromVote(_vId = vId, _cId = cId);
       await tx.wait();
 
       // получаем обновлённую информацию о первом голосовании,
@@ -412,7 +413,7 @@ describe("Voting", function () {
 
       // функция удаления кандидата
       await expect(
-        voting.connect(candidate3).delCandidateFromVotes(_vId = vId, _cId = cId)
+        voting.connect(candidate3).delCandidateFromVote(_vId = vId, _cId = cId)
       ).to.be.revertedWith("Only the host can add, change, delete votes and candidates");
 
       // функция старта голосования
@@ -459,7 +460,7 @@ describe("Voting", function () {
 
       // функция удаления кандидата
       await expect(
-        voting.delCandidateFromVotes(_vId = vId, _cId = cId)
+        voting.delCandidateFromVote(_vId = vId, _cId = cId)
       ).to.be.revertedWith("Voting has begun. You cannot change or delete it");
 
       // функция старта голосования

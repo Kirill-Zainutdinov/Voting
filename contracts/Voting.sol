@@ -251,7 +251,7 @@ contract Voting{
     }
 
     // Функция удаления одного кандидата из списка
-    function delCandidateFromVotes(
+    function delCandidateFromVote(
         uint _vId,
         uint _cId
     )
@@ -506,5 +506,4 @@ contract Voting{
         payable(owner).transfer(fee);
     }
 }
-
-// Voting deployed to: 0x2213faC85F8888f9Cd107dc0c239fA130d9e58f3
+// Voting deployed to: 0x44bA6F954746399c74968d7ce49befdEb6aa9EdE
